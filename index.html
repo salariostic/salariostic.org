@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SalariosTic.org — Calculadora de pérdida salarial en el sector TIC</title>
+  <meta name="description" content="Calcula cuánto has perdido por la absorción de trienios y las subidas de convenio en el sector TIC. Período 2022–2026, XIX Convenio Colectivo.">
+
+  <!-- Open Graph (WhatsApp, Telegram, LinkedIn) -->
+  <meta property="og:type"        content="website">
+  <meta property="og:url"         content="https://www.salariostic.org/">
+  <meta property="og:title"       content="SalariosTic.org — Calculadora de pérdida salarial en el sector TIC">
+  <meta property="og:description" content="¿Cuánto has perdido por la absorción de trienios y el IPC? Calcula tu pérdida salarial real con las tablas del convenio colectivo TIC 2022–2026.">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card"        content="summary">
+  <meta name="twitter:title"       content="SalariosTic.org — Calculadora de pérdida salarial TIC">
+  <meta name="twitter:description" content="¿Cuánto has perdido por la absorción de trienios y el IPC? Calcula tu pérdida salarial real con las tablas del convenio colectivo TIC 2022–2026.">
+
+  <!-- Fuentes -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- Estilos -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+
+<body>
+
+  <!-- ================================================================ -->
+  <!-- CABECERA                                                          -->
+  <!-- ================================================================ -->
+  <header>
+    <h1>Salarios <span>TIC</span></h1>
+    <div class="header-derecha">
+      <p class="subtitulo">
+        Calculadora de pérdida salarial en el sector TIC<br>Período 2022–2026
+      </p>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- ============================================================== -->
+    <!-- PANEL LATERAL — CONTROLES                                       -->
+    <!-- ============================================================== -->
+    <aside class="panel">
+
+      <!-- Período de análisis -->
+      <div class="panel-section">
+        <h2>Período de análisis <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Período de análisis</b><br>Define el rango de años que quieres estudiar. El año de inicio marca el punto de partida, el salario que introduces es el que cobrabas justo antes de ese año.<br>El año de fin es el último año incluido en los cálculos y el gráfico.</span></span></h2>
+        <div class="mod-row">
+          <div>
+            <label for="sel-year">Año de inicio</label>
+            <select id="sel-year"></select>
+          </div>
+          <div>
+            <label for="sel-year-fin">Año de fin</label>
+            <select id="sel-year-fin"></select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Datos iniciales -->
+      <div class="panel-section">
+        <h2>Tu situación</h2>
+
+        <div>
+          <label for="inp-salario">Salario bruto anual previo a <span id="lbl-year-inicio">2022</span> (€) <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Salario de partida</b><br>Lo que cobrabas justo antes del período de análisis, es decir, tu salario bruto anual en el año anterior al año de inicio. Es el punto de partida del cálculo.</span></span></label>
+          <div class="num-wrap">
+            <input type="text" id="inp-salario" inputmode="numeric">
+            <div class="num-spin">
+              <button type="button" class="num-up" data-target="inp-salario">▲</button>
+              <button type="button" class="num-down" data-target="inp-salario">▼</button>
+            </div>
+          </div>
+          <p class="input-error" id="error-salario"></p>
+        </div>
+
+        <div class="combobox-wrap">
+          <label for="inp-codigo">Grupo profesional <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Grupo profesional</b><br>Puedes encontrarlo en tu nómina, es tu categoría según el convenio colectivo. Escribe el código BOE (p.ej. A3GDN1) o busca por área y nivel. El código tiene el formato A{área}G{grupo}N{nivel}.</span></span></label>
+          <input type="text" id="inp-codigo" autocomplete="off" spellcheck="false" placeholder="p.ej. A3GDN1">
+          <button class="combobox-clear" id="inp-codigo-clear" type="button" aria-label="Borrar" hidden>✕</button>
+          <ul id="inp-codigo-lista" class="combobox-lista"></ul>
+          <p class="codigo-desc" id="inp-codigo-desc"></p>
+          <p class="input-error" id="error-area"></p>
+        </div>
+
+        <div>
+          <label>Fecha de alta en la empresa <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Fecha de alta</b><br>Cuándo entraste en la empresa. Puedes encontrarla en tu contrato o nómina. Se usa para calcular los trienios de antigüedad: 1 trienio por cada 3 años, máximo 9.</span></span></label>
+          <div class="mod-row">
+            <div>
+              <label for="alta-mes">Mes</label>
+              <select id="alta-mes">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+            <div>
+              <label for="alta-year">Año</label>
+              <select id="alta-year"></select>
+            </div>
+          </div>
+          <p class="input-error" id="error-alta"></p>
+        </div>
+      </div>
+
+      <!-- Formulario de modificaciones -->
+      <div class="panel-section">
+        <h2>Añadir modificación <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Añadir modificación</b><br>Registra cambios de nivel o subidas salariales ocurridas durante el período. Puedes añadir varias modificaciones. Se aplican desde la fecha indicada hasta la siguiente modificación o el fin del período.</span></span></h2>
+
+        <div class="mod-form">
+          <div class="mod-row">
+            <div>
+              <label for="mod-mes">Mes</label>
+              <select id="mod-mes">
+                <option value="1">Enero</option>
+                <option value="2">Febrero</option>
+                <option value="3">Marzo</option>
+                <option value="4">Abril</option>
+                <option value="5">Mayo</option>
+                <option value="6">Junio</option>
+                <option value="7">Julio</option>
+                <option value="8">Agosto</option>
+                <option value="9">Septiembre</option>
+                <option value="10">Octubre</option>
+                <option value="11">Noviembre</option>
+                <option value="12">Diciembre</option>
+              </select>
+            </div>
+            <div>
+              <label for="mod-year">Año</label>
+              <select id="mod-year"></select>
+            </div>
+          </div>
+
+          <div>
+            <label for="mod-tipo">Tipo de modificación <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Tipo de modificación</b><br>· Subida salarial: registra un aumento de sueldo con el nuevo importe bruto anual.<br>· Cambio de nivel: si ascendiste o cambiaste de categoría en el convenio.</span></span></label>
+            <select id="mod-tipo">
+              <option value="nivel">Cambio de nivel</option>
+              <option value="salario" selected>Subida salarial</option>
+            </select>
+          </div>
+
+          <div id="wrap-mod-nivel" style="display:none">
+            <div class="combobox-wrap">
+              <label for="mod-codigo">Grupo profesional <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Grupo profesional</b><br>Puedes encontrarlo en tu nómina, es tu categoría según el convenio colectivo. Escribe el código BOE (p.ej. A3GDN1) o busca por área y nivel. El código tiene el formato A{área}G{grupo}N{nivel}.</span></span></label>
+              <input type="text" id="mod-codigo" autocomplete="off" spellcheck="false" placeholder="p.ej. A3GDN1">
+              <button class="combobox-clear" id="mod-codigo-clear" type="button" aria-label="Borrar" hidden>✕</button>
+              <ul id="mod-codigo-lista" class="combobox-lista"></ul>
+            </div>
+          </div>
+
+          <div id="wrap-mod-salario">
+            <label for="mod-val-salario">Nuevo salario bruto anual (€) <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Nuevo salario</b><br>El salario bruto anual a partir de la fecha indicada. Los años anteriores siguen con el salario previo.</span></span></label>
+            <div class="num-wrap">
+              <input type="text" id="mod-val-salario" inputmode="numeric" placeholder="33.000">
+              <div class="num-spin">
+                <button type="button" class="num-up" data-target="mod-val-salario">▲</button>
+                <button type="button" class="num-down" data-target="mod-val-salario">▼</button>
+              </div>
+            </div>
+          </div>
+
+          <button class="btn-add" id="btn-add-mod">+ Añadir</button>
+        </div>
+      </div>
+
+      <!-- Lista de modificaciones activas -->
+      <div class="panel-section">
+        <h2>Modificaciones activas <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Modificaciones activas</b><br>Lista de los cambios registrados, ordenados cronológicamente. Cada modificación se aplica desde el mes y año indicados y sustituye al valor anterior. Pulsa ✕ para eliminar una modificación.</span></span></h2>
+        <div id="lista-mods"></div>
+      </div>
+
+      <!-- Compartir -->
+      <div class="panel-section compartir-section">
+        <button id="btn-compartir" class="btn-compartir" type="button">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+          Compartir
+        </button>
+        <p class="compartir-nota">Genera y copia un enlace en el portapapeles con el período, grupo, salario y fecha de alta precargados. No incluye modificaciones. No se envía nada a ningún servidor.</p>
+      </div>
+
+    </aside>
+
+    <!-- ============================================================== -->
+    <!-- KPIs — TITULARES                                               -->
+    <!-- ============================================================== -->
+    <section class="kpis">
+
+      <div class="kpi">
+        <span class="kpi-label">Tu salario actual</span>
+        <div class="kpi-valor azul" id="kpi-salario-actual">—</div>
+        <p class="kpi-nota">Lo que estás cobrando ahora, incluyendo modificaciones</p>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">Dinero perdido por absorción</span>
+        <div class="kpi-valor amarillo" id="kpi-perdida-absorcion">—</div>
+        <p class="kpi-nota">Lo que has dejado de cobrar en el período por la absorción de las subidas de tablas y los trienios generados en el período.</p>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">Tu salario sin absorción</span>
+        <div class="kpi-valor amarillo" id="kpi-sin-absorcion">—</div>
+        <p class="kpi-nota">Lo que cobrarías si no se absorbieran las subidas de tablas y los trienios generados en el período. </p>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">Dinero perdido frente al IPC</span>
+        <div class="kpi-valor rojo" id="kpi-perdida-poder">—</div>
+        <p class="kpi-nota">Suma de lo que has perdido cada año en poder adquisitivo frente a la inflación</p>
+      </div>
+
+      <div class="kpi">
+        <span class="kpi-label">Tu salario equivalente al IPC</span>
+        <div class="kpi-valor rojo" id="kpi-poder-ipc">—</div>
+        <p class="kpi-nota">Lo que deberías cobrar para mantener el poder adquisitivo de tu salario inicial</p>
+      </div>
+
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- GRÁFICO                                                         -->
+    <!-- ============================================================== -->
+    <div class="grafico-wrapper">
+      <p class="seccion-titulo">Evolución salarial</p>
+      <canvas id="grafico"></canvas>
+      <div id="grafico-tooltip" class="grafico-tooltip"></div>
+      <p class="grafico-nota">* Solo incluye trienios generados en el período analizado</p>
+    </div>
+
+    <!-- ============================================================== -->
+    <!-- TABLA DETALLE                                                   -->
+    <!-- ============================================================== -->
+    <div class="tabla-wrapper">
+      <p class="seccion-titulo">Detalle por año · pasa el ratón sobre una fila para ver más detalles</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Año</th>
+            <th>Grupo</th>
+            <th class="th-teo">
+              Convenio
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Tablas de convenio</b><br><br>
+                  Salario mínimo fijado en el BOE para el nivel y año. Se divide en Salario base y Plus de convenio. Tanto las subidas de tablas como los trienios se calculan sobre el salario base, no sobre el plus de convenio. No incluye antigüedad ni complementos personales.
+                </span>
+              </span>
+            </th>
+            <th class="th-real">
+              Salario real
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Salario real</b><br><br>
+                  Lo que cobras realmente ese año. Se compone de las tablas de convenio más un complemento personal. La absorción (art. 7 del convenio) permite que ese complemento "absorba" las subidas de tablas y los trienios, de modo que el sueldo no sube aunque el convenio lo contemple.<br><br>
+                  La absorción tiene límite: si el complemento personal es bajo (salarios cercanos a tabla), las subidas sí se cobran. Si la antigüedad es muy alta, los trienios pueden superar el complemento y parte de ellos sí se pagan.
+                </span>
+              </span>
+            </th>
+            <th class="th-sinabs">
+              Sin absorción *
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Salario sin absorción</b><br><br>
+                  Lo que deberías cobrar año a año si la empresa no absorbiera las subidas de convenio ni los trienios.<br><br>
+                  Complemento personal + tablas convenio + trienios ganados durante el período de análisis.<br><br>
+                  * Solo se cuentan los trienios ganados durante el período para que el dato sea comparable entre trabajadores con distinta antigüedad. Incluir los trienios acumulados produciría diferencias de hasta el 50% entre perfiles con el mismo salario.
+                </span>
+              </span>
+            </th>
+            <th class="th-trienio">
+              Trienios
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Cálculo de trienios</b><br><br>
+                  1 trienio por cada 3 años de antigüedad · máximo 9<br><br>
+                  Trienios 1–5: 5% del salario base c/u<br>
+                  Trienios 6–8: 10% del salario base c/u<br>
+                  Trienio 9: 5% del salario base<br><br>
+                  Base: salario base de convenio del nivel y año en curso. Son absorbibles por el art. 7 del convenio.
+                </span>
+              </span>
+            </th>
+            <th class="th-sinabs">
+              Pérd. absorción *
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Pérdida por absorción</b><br><br>
+                  Lo que pierdes año a año porque la empresa absorbe las subidas de tablas y los trienios en tu complemento personal, de modo que tu salario real no sube aunque el convenio lo contemple.<br><br>
+                  Puede ser:<br>
+                  · Por trienios ganados durante el período de análisis<br>
+                  · Por subida de tablas, incremento de tablas no trasladado<br><br>
+                  * Solo se cuentan los trienios ganados durante el período para que el dato sea comparable entre trabajadores con distinta antigüedad. Incluir los trienios acumulados produciría diferencias de hasta el 50% entre perfiles con el mismo salario.
+                </span>
+              </span>
+            </th>
+            <th class="th-ipc-val">
+              Salario IPC
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Salario equivalente al IPC</b><br><br>
+                  Lo que necesitarías cobrar para mantener el mismo poder adquisitivo que tenías al inicio del período.<br><br>
+                  Salario inicial acumulando el IPC de cada año, empezando por el del año previo al período.
+                </span>
+              </span>
+            </th>
+            <th class="th-ipc-val">
+              Pérd. poder adq.
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Pérdida de poder adquisitivo</b><br><br>
+                  Diferencia entre el salario equivalente al IPC y el salario real.<br><br>
+                  Refleja cuánto has perdido frente a la inflación, independientemente de la absorción.
+                </span>
+              </span>
+            </th>
+            <th class="th-ipc-val">
+              IPC año ant.
+              <span class="th-help">?
+                <span class="th-help-popup th-help-popup--left">
+                  <b>IPC del año anterior</b><br><br>
+                  Inflación media anual del año previo · fuente INE.<br><br>
+                  Se usa el IPC de Y-1 porque es el último dato conocido al inicio del año Y: la subida que la empresa debería haber aplicado para no erosionar el poder adquisitivo.<br><br>
+                </span>
+              </span>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="tabla-body"></tbody>
+        <tfoot id="tabla-foot"></tfoot>
+      </table>
+    </div>
+
+  <div id="tabla-tooltip" class="tabla-tooltip"></div>
+
+  </main>
+
+  <!-- ================================================================ -->
+  <!-- FOOTER                                                            -->
+  <!-- ================================================================ -->
+  <footer>
+    <div>
+      <strong>Nota:</strong>
+      Los cálculos son orientativos y pueden contener errores, contrástalos siempre con tu nómina y el BOE. Si encuentras un error o quieres sugerir una mejora, por favor <a href="mailto:contacto@salariostic.org" target="_blank" rel="noopener">envíanos un correo</a>.
+    </div>
+    <div>
+      <strong>Privacidad:</strong>
+      Esta herramienta no recoge ningún dato personal. Todo el cálculo ocurre en tu navegador y no se envía nada a ningún servidor.
+    </div>
+    <div>
+      <strong>Fuentes:</strong>
+      <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-17238" target="_blank" rel="noopener">XVIII Convenio BOE-A-2023-17238</a> ·
+      <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-7019" target="_blank" rel="noopener">Actualización 2024 BOE-A-2024-7019</a> ·
+      <a href="https://www.boe.es/diario_boe/txt.php?id=BOE-A-2025-7766" target="_blank" rel="noopener">XIX Convenio BOE-A-2025-7766</a> ·
+      <a href="https://www.ine.es/jaxiT3/Tabla.htm?t=23706" target="_blank" rel="noopener">IPC media anual INE</a>
+    </div>
+  </footer>
+
+  <!-- Punto de entrada: type="module" para usar import/export -->
+  <script type="module">
+    import { init } from './js/app.js';
+    document.addEventListener('DOMContentLoaded', () => init());
+  </script>
+
+</body>
+</html>
