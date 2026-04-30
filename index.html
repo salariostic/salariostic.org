@@ -64,10 +64,10 @@
 
       <!-- Datos iniciales -->
       <div class="panel-section">
-        <h2>Tu situación</h2>
+        <h2>Tu situación inicial</h2>
 
         <div>
-          <label for="inp-salario">Salario bruto anual previo a <span id="lbl-year-inicio">2022</span> (€) <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Salario de partida</b><br>Lo que cobrabas justo antes del período de análisis, es decir, tu salario bruto anual en el año anterior al año de inicio. Es el punto de partida del cálculo.</span></span></label>
+          <label for="inp-salario">Salario bruto anual previo a <span id="lbl-year-inicio">2022</span> (€)&nbsp;<span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Salario de partida</b><br>Lo que cobrabas justo antes del período de análisis, es decir, tu salario bruto anual en el año anterior al año de inicio. Es el punto de partida del cálculo.</span></span></label>
           <div class="num-wrap">
             <input type="text" id="inp-salario" inputmode="numeric">
             <div class="num-spin">
@@ -118,7 +118,7 @@
 
       <!-- Formulario de modificaciones -->
       <div class="panel-section">
-        <h2>Añadir modificación <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Añadir modificación</b><br>Registra cambios de nivel o subidas salariales ocurridas durante el período. Puedes añadir varias modificaciones. Se aplican desde la fecha indicada hasta la siguiente modificación o el fin del período.</span></span></h2>
+        <h2>Modificaciones<span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Añadir modificación</b><br>Registra cambios de nivel o subidas salariales ocurridas durante el período. Puedes añadir varias modificaciones. Se aplican desde la fecha indicada hasta la siguiente modificación o el fin del período.</span></span></h2>
 
         <div class="mod-form">
           <div class="mod-row">
@@ -174,22 +174,33 @@
           </div>
 
           <button class="btn-add" id="btn-add-mod">+ Añadir</button>
+          <div id="lista-mods"></div>
         </div>
       </div>
 
-      <!-- Lista de modificaciones activas -->
-      <div class="panel-section">
-        <h2>Modificaciones activas <span class="th-help">?<span class="th-help-popup th-help-popup--right"><b>Modificaciones activas</b><br>Lista de los cambios registrados, ordenados cronológicamente. Cada modificación se aplica desde el mes y año indicados y sustituye al valor anterior. Pulsa ✕ para eliminar una modificación.</span></span></h2>
-        <div id="lista-mods"></div>
-      </div>
-
       <!-- Compartir -->
-      <div class="panel-section compartir-section">
-        <button id="btn-compartir" class="btn-compartir" type="button">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
-          Compartir
-        </button>
-        <p class="compartir-nota">Genera y copia un enlace en el portapapeles con el período, grupo, salario y fecha de alta precargados. No incluye modificaciones. No se envía nada a ningún servidor.</p>
+      <div class="panel-section acciones-section">
+        <div class="accion-wrap">
+          <button id="btn-guardar" class="btn-guardar" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Guardar
+          </button>
+          <span class="accion-tooltip">Guarda tu situación en este dispositivo: período, grupo, salario, fecha de alta y modificaciones. Solo tú tienes acceso; nada se envía a ningún servidor. Clic en «✓ Guardado» para borrar los datos guardados.</span>
+        </div>
+        <div class="accion-wrap">
+          <button id="btn-compartir" class="btn-compartir" type="button">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+            Compartir
+          </button>
+          <span class="accion-tooltip">Genera y copia un enlace en el portapapeles con el período, grupo, salario y fecha de alta precargados. No incluye modificaciones. No se envía nada a ningún servidor.</span>
+        </div>
+        <div class="accion-wrap">
+          <a href="mailto:contacto@salariostic.org" target="_blank" rel="noopener" class="btn-guardar btn-contactar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Contactar
+          </a>
+          <span class="accion-tooltip">Escríbenos para dudas, sugerencias o comentarios.</span>
+        </div>
       </div>
 
     </aside>
@@ -238,8 +249,9 @@
       <p class="seccion-titulo">Evolución salarial</p>
       <canvas id="grafico"></canvas>
       <div id="grafico-tooltip" class="grafico-tooltip"></div>
-      <p class="grafico-nota">* Solo incluye trienios generados en el período analizado</p>
     </div>
+
+  <p id="proyeccion-absorcion" class="proyeccion-absorcion"></p>
 
     <!-- ============================================================== -->
     <!-- TABLA DETALLE                                                   -->
@@ -256,7 +268,16 @@
               <span class="th-help">?
                 <span class="th-help-popup">
                   <b>Tablas de convenio</b><br><br>
-                  Salario mínimo fijado en el BOE para el nivel y año. Se divide en Salario base y Plus de convenio. Tanto las subidas de tablas como los trienios se calculan sobre el salario base, no sobre el plus de convenio. No incluye antigüedad ni complementos personales.
+                  Salario mínimo fijado en el BOE para el nivel y año: salario base + plus de convenio. No incluye antigüedad ni complementos personales. Las subidas de tablas se calculan sobre el salario base.
+                </span>
+              </span>
+            </th>
+            <th class="th-teo">
+              Antigüedad
+              <span class="th-help">?
+                <span class="th-help-popup">
+                  <b>Antigüedad acumulada</b><br><br>
+                  Importe total de trienios que corresponden al trabajador según su fecha de alta, calculado sobre el salario base del nivel y año. Incluye todos los trienios, no solo los ganados en el período analizado.
                 </span>
               </span>
             </th>

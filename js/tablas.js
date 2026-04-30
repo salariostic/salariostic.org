@@ -1,11 +1,9 @@
 /**
- * data.js — Modelo de datos y cálculos puros
- * Convenio TIC · Todas las áreas · 2022–2026
+ * tablas.js — Datos del convenio colectivo TIC
  *
- * Sin referencias al DOM. Puede testearse de forma aislada.
- *
- * Leyenda valores:
- *   BOE  = verificado contra imagen BOE
+ * Contiene exclusivamente los datos del BOE: tablas salariales, IPC,
+ * incrementos pactados, áreas, niveles y códigos.
+ * Este fichero cambia cuando se firma un nuevo convenio o el INE publica un IPC.
  *
  * FUENTES:
  *   XVIII Convenio:      BOE-A-2023-17238 (26/07/2023)
@@ -41,7 +39,7 @@ export const INCREMENTOS = {
 // ---------------------------------------------------------------------------
 // ESCALA DE TRIENIOS
 // ---------------------------------------------------------------------------
-const TRIENIOS = {
+export const TRIENIOS = {
   tramo1: { cantidad: 5, porcentaje: 0.05 },
   tramo2: { cantidad: 3, porcentaje: 0.10 },
   tramo3: { cantidad: 1, porcentaje: 0.05 },
@@ -118,7 +116,7 @@ export const YEARS = [2022, 2023, 2024, 2025, 2026];
 // TABLAS SALARIALES
 // € anuales brutos.  salarioBase + plusConvenio
 // ---------------------------------------------------------------------------
-const TABLAS = {
+export const TABLAS = {
 
   // -------------------------------------------------------------------------
   // ÁREA 1 — BPO Y ADMINISTRACIÓN INTERNA
@@ -702,210 +700,3 @@ const TABLAS = {
   },
 
 };
-
-// ---------------------------------------------------------------------------
-// FUNCIONES DE CÁLCULO
-// ---------------------------------------------------------------------------
-
-/**
- * Devuelve salarioBase, plusConvenio y total para un nivel/año/área.
- * Retorna null si el área, año o nivel no existen.
- */
-export function getTablaSalarial(nivel, year, area = 'programacion') {
-  const areaTablas = TABLAS[area];
-  if (!areaTablas) return null;
-  const tabla = areaTablas[year];
-  if (!tabla?.niveles?.[nivel]) return null;
-  const { salarioBase, plusConvenio } = tabla.niveles[nivel];
-  return { salarioBase, plusConvenio, total: salarioBase + plusConvenio };
-}
-
-/**
- * Número de trienios completos a 31/12 del año indicado.
- */
-function trieniosCompletados(fechaAlta, year) {
-  const inicio = new Date(fechaAlta);
-  const fin    = new Date(year, 11, 31);
-  const meses  = (fin.getFullYear() - inicio.getFullYear()) * 12
-               + (fin.getMonth()    - inicio.getMonth());
-  return Math.min(MAX_TRIENIOS, Math.max(0, Math.floor(meses / 36)));
-}
-
-/**
- * Importe anual de antigüedad según la escala de trienios del convenio.
- * Base: salario base del nivel/año correspondiente.
- */
-function importeAntiguedad(nivel, year, nTrienios, area = 'programacion') {
-  if (nTrienios <= 0) return 0;
-  const t = getTablaSalarial(nivel, year, area);
-  if (!t) return 0;
-
-  const sb = t.salarioBase;
-  const { tramo1, tramo2, tramo3 } = TRIENIOS;
-  let total = 0;
-  let r = nTrienios;
-
-  const t1 = Math.min(r, tramo1.cantidad);
-  total += sb * tramo1.porcentaje * t1;
-  r -= t1;
-
-  if (r > 0) {
-    const t2 = Math.min(r, tramo2.cantidad);
-    total += sb * tramo2.porcentaje * t2;
-    r -= t2;
-  }
-
-  if (r > 0) {
-    total += sb * tramo3.porcentaje * Math.min(r, tramo3.cantidad);
-  }
-
-  return total;
-}
-
-/**
- * Aplica el IPC acumulado a un salario desde yearDesde hasta yearHasta (exclusive).
- */
-function aplicarIPC(salario, yearDesde, yearHasta) {
-  let s = salario;
-  for (let y = yearDesde; y < yearHasta; y++) {
-    if (IPC[y]) s *= (1 + IPC[y].valor);
-  }
-  return s;
-}
-
-/**
- * Salario teórico de convenio sin absorción: total convenio + antigüedad.
- */
-function salarioTeoricoConvenio(nivel, year, fechaAlta, area = 'programacion') {
-  const t = getTablaSalarial(nivel, year, area);
-  if (!t) return null;
-  const trienos = trieniosCompletados(fechaAlta, year);
-  const antig   = importeAntiguedad(nivel, year, trienos, area);
-  return {
-    salarioBase:  t.salarioBase,
-    plusConvenio: t.plusConvenio,
-    trienos,
-    antig,
-    total: t.total + antig,
-  };
-}
-
-/**
- * Genera la serie de datos año a año para el gráfico.
- */
-export function generarSerie({
-  yearInicio,
-  yearFin = 2026,
-  area = 'programacion',
-  nivelInicio,
-  salarioInicio,
-  fechaAlta,
-  modificaciones = [],
-}) {
-  const mods = [...modificaciones].sort((a, b) =>
-    a.year !== b.year ? a.year - b.year : a.mes - b.mes
-  );
-
-  const years = YEARS.filter(y => y >= yearInicio && y <= yearFin);
-  let nivelActual   = nivelInicio;
-  let areaActual    = area;
-  let salarioActual = salarioInicio;
-
-  // Trienios que el trabajador ya tenía ANTES del período (hasta 31/12 del año previo).
-  // Sirve para detectar trienio nuevo en el año 1 del análisis.
-  const trieniosPrePeriodo = trieniosCompletados(fechaAlta, yearInicio - 1);
-
-  // El complemento personal captura solo la diferencia entre salarioInicio y la tabla
-  // base del convenio (sin trienios). Los trienios — tanto los previos como los nuevos —
-  // son absorbibles independientemente, por eso no forman parte del complemento.
-  const tablaInicio = getTablaSalarial(nivelInicio, yearInicio, area);
-  let complementoPersonal = tablaInicio
-    ? salarioInicio - tablaInicio.total
-    : 0;
-
-  return years.map(year => {
-    mods
-      .filter(m => m.year === year)
-      .forEach(m => {
-        if (m.tipo === 'nivel') {
-          nivelActual = m.valor;
-          if (m.area) areaActual = m.area;
-        }
-        if (m.tipo === 'salario') {
-          salarioActual = m.valor;
-          const tablasMod = getTablaSalarial(nivelActual, year, areaActual);
-          complementoPersonal = tablasMod ? m.valor - tablasMod.total : 0;
-        }
-      });
-
-    // Auto-promoción E-2 → E-1 (artículo XVIII Convenio, desde 01/01/2023).
-    // A los 3 años en E-2 el trabajador pasa automáticamente a E-1.
-    let e2Promovido = false;
-    if (nivelActual === 'E-2' && year >= 2023 && trieniosCompletados(fechaAlta, year) >= 1) {
-      nivelActual  = 'E-1';
-      e2Promovido  = true;
-    }
-
-    const tablas = getTablaSalarial(nivelActual, year, areaActual);
-    const teo    = salarioTeoricoConvenio(nivelActual, year, fechaAlta, areaActual);
-    const poder  = aplicarIPC(salarioInicio, yearInicio - 1, year);
-
-    const trieniosActuales   = teo?.trienos ?? 0;
-    const trieniosAnteriores = year > yearInicio
-      ? trieniosCompletados(fechaAlta, year - 1)
-      : trieniosPrePeriodo;
-    const trienioNuevo = trieniosActuales > trieniosAnteriores;
-    const importeTrienioNuevo = trienioNuevo
-      ? importeAntiguedad(nivelActual, year, trieniosActuales, areaActual)
-        - importeAntiguedad(nivelActual, year, trieniosActuales - 1, areaActual)
-      : 0;
-
-    // Solo los trienios ganados DURANTE el período contribuyen a perdidaAbsorcion.
-    // Los trienios previos al período ya estaban absorbidos antes y distorsionan el mensaje.
-    const importeAntigPeriodo = importeAntiguedad(nivelActual, year, trieniosActuales, areaActual)
-                              - importeAntiguedad(nivelActual, year, trieniosPrePeriodo, areaActual);
-
-    const salarioSinAbsorcion = tablas
-      ? complementoPersonal + tablas.total + importeAntigPeriodo
-      : null;
-
-    return {
-      year,
-      e2Promovido,
-      areaEfectiva:        areaActual,
-      nivelEfectivo:       nivelActual,
-      salarioReal:         salarioActual,
-      salarioConvenio:     tablas?.total ?? null,
-      salarioSinAbsorcion,
-      salarioPoder:        poder,
-      perdidaAbsorcion:    salarioSinAbsorcion ? Math.max(0, salarioSinAbsorcion - salarioActual) : 0,
-      perdidaPoder:        Math.max(0, poder - salarioActual),
-      trieniosActuales,
-      trienioNuevo,
-      importeTrienioNuevo,
-      ipc:                 IPC[year - 1] ?? null,
-      desglose:            teo
-        ? {
-            salarioBase:  teo.salarioBase,
-            plusConvenio: teo.plusConvenio,
-            trienos:      teo.trienos,
-            antig:        teo.antig,          // total trienios (para columna de antigüedad)
-            antigPeriodo: importeAntigPeriodo, // solo período (para cálculo de absorción)
-          }
-        : null,
-    };
-  });
-}
-
-/**
- * Suma las pérdidas acumuladas de toda la serie.
- */
-export function calcularAcumulados(serie) {
-  return serie.reduce(
-    (acc, p) => ({
-      perdidaAbsorcion: acc.perdidaAbsorcion + p.perdidaAbsorcion,
-      perdidaPoder:     acc.perdidaPoder     + p.perdidaPoder,
-    }),
-    { perdidaAbsorcion: 0, perdidaPoder: 0 }
-  );
-}

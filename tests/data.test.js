@@ -1,10 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import {
-  MAX_TRIENIOS,
-  getTablaSalarial,
-  generarSerie,
-  calcularAcumulados,
-} from '../js/data.js';
+import { MAX_TRIENIOS }                              from '../js/tablas.js';
+import { getTablaSalarial, generarSerie, calcularAcumulados } from '../js/calculos.js';
 
 // ---------------------------------------------------------------------------
 // Helpers

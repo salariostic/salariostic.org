@@ -75,11 +75,22 @@ Publicación en GitHub Pages. Desarrollo local con Live Server (VSCode).
   de la promoción. En la tabla se muestra un badge `↑E-1` en ámbar; el tooltip del código
   explica la causa. El complemento personal no se recalcula (mismo comportamiento que una
   modificación de nivel manual).
-- **Compartir por URL** — botón "Copiar enlace" al final del panel lateral. Construye la URL
+- **Compartir por URL** — botón "Compartir" en la sección Acciones del panel. Construye la URL
   con params (`yi`, `yf`, `g`, `s`, `a`) en memoria y la copia al portapapeles sin modificar
   la barra del navegador. No incluye modificaciones. Al recibir un enlace, `leerDesdeURL()`
   lee los params, parchea el estado y limpia la URL inmediatamente con `history.replaceState`.
   La URL del navegador nunca expone datos del usuario salvo acción explícita.
+- **localStorage — persistencia manual** — botón "Guardar mis datos" en la sección Acciones.
+  Clave `salariosTic_v1`. Guarda el estado completo incluyendo `modificaciones` y `_nextId`.
+  Prioridad de restauración: URL params > localStorage > defaults. El botón actúa como toggle:
+  "Guardar mis datos" → guarda y muestra "✓ Guardado — clic para borrar" (verde); clic en ese
+  estado → borra localStorage y vuelve al estado inicial. Funciones en app.js:
+  `guardarEnLocalStorage()`, `restaurarDesdeLocalStorage()`, `actualizarBtnGuardar()`.
+- **Sección Acciones del panel** — agrupa tres botones (Guardar, Compartir, Contactar) en
+  `.acciones-section`. Cada uno en un `.accion-wrap` con `position: relative`. El tooltip
+  (`.accion-tooltip`) usa `position: absolute; bottom: calc(100% + 6px)` y se muestra con
+  CSS puro (`:hover`), sin JS. Contactar abre `mailto:contacto@salariostic.org`. No hay
+  texto estático bajo los botones.
 - **Tooltips: `position: fixed`** — los `.th-help-popup` usan `position: fixed` + JS para
   posicionarse, en lugar de `position: absolute`. Esto evita el recorte por `overflow-x: auto`
   del `.tabla-wrapper`. El posicionamiento se calcula en `bindEventos` con `getBoundingClientRect`
@@ -96,16 +107,29 @@ Publicación en GitHub Pages. Desarrollo local con Live Server (VSCode).
 El usuario introduce su salario "previo al período". Se trata como el salario que
 cobraba en 2021, antes de que entrara en vigor el XVIII Convenio.
 
-### `complementoPersonal` — sin trienios
+### `complementoPersonal` — calculado contra la tabla pura, sin trienios
 
 ```js
 complementoPersonal = salarioInicio - tablaInicio.total   // tablaInicio.total = salarioBase + plusConvenio, SIN trienios
 ```
 
-Los trienios **no forman parte del complemento personal**. Solo los trienios
-ganados **durante el período** (`yearInicio`–`yearFin`) contribuyen a `perdidaAbsorcion`.
-Los trienios previos al período se excluyen del cálculo de absorción porque ya estaban
-absorbidos antes y distorsionan la comparación entre trabajadores con distinta antigüedad.
+El complemento se fija contra la **tabla pura** (salarioBase + plusConvenio), no contra
+la tabla más la antigüedad previa. Esto significa que los trienios previos al período
+quedan numéricamente "sumergidos" dentro del complemento: si un trabajador cobraba
+32.000€ y la tabla era 15.000€ con 2.000€ de trienios previos, el complemento es
+17.000€ (no 15.000€). La empresa puede absorber contra ese complemento tanto las
+subidas de tablas como los trienios nuevos.
+
+La alternativa sería calcular `complemento = salario - tabla - trieniosPrevios`, lo que
+produciría un complemento más pequeño y haría los trienios previos "no absorbibles".
+Se descartó porque no refleja cómo funciona el artículo 7 en la práctica.
+
+**Consecuencia importante:** los trienios previos al período son invisibles en el cálculo
+de `salarioSinAbsorcion` y `perdidaAbsorcion`. Solo los trienios ganados **durante el
+período** (`yearInicio`–`yearFin`) contribuyen a ambos. Esto hace los números comparables
+entre trabajadores con distinta antigüedad, pero subestima el margen de absorción real
+en trabajadores con mucha antigüedad. Ver debate en historial: posible cambio futuro
+para incluir todos los trienios en la columna "Convenio".
 
 Cuando hay una **modificación salarial**, el complemento se recalcula como:
 ```js
@@ -234,13 +258,12 @@ Fuentes: `Playfair Display` (titulares/KPIs) · `IBM Plex Mono` (etiquetas/datos
 
 ### Panel lateral (orden de arriba a abajo)
 1. Período de análisis (año inicio / año fin) — tooltip en h2
-2. Tu situación — tooltip individual en cada campo (salario, grupo profesional, fecha de alta)
-3. Añadir modificación — tooltip individual en tipo y nuevo salario; sin tooltip en h2
-4. Modificaciones activas — tooltip en h2
-5. Compartir — botón "Copiar enlace" + nota explicativa (sin tooltip)
+2. Tu situación inicial — tooltip individual en cada campo (salario, grupo profesional, fecha de alta)
+3. Modificaciones — formulario + lista activa en la misma sección; `#lista-mods` dentro de `.mod-form`, bajo el botón "Añadir". Tooltip en h2.
+4. Acciones — tres botones (Guardar mis datos · Compartir · Contactar) en `.acciones-section`. Tooltip CSS-only al hover (`.accion-tooltip`).
 
-Los h2 de "Tu situación" y "Añadir modificación" no tienen `?` propio; el contexto
-se da campo a campo. Los tooltips del panel usan `th-help-popup--right`.
+El h2 de "Tu situación inicial" no tiene `?` propio; el contexto se da campo a campo.
+Los tooltips del panel usan `th-help-popup--right`. Ancho de columna: **340px**. Gap entre secciones: **16px**. Labels con `text-align: left`.
 
 **"Nivel de convenio" renombrado a "Grupo profesional"** en todos los labels de UI
 y en la cabecera de la tabla (columna "Grupo").
@@ -265,8 +288,15 @@ Cuatro líneas en orden de leyenda: Convenio · Salario real · Sin absorción *
 El resize reutiliza `_serie` cacheada, sin recalcular la serie.
 **Área sombreada** entre la línea azul (salario real) y la roja (equiv. IPC) con
 `rgba(192, 57, 43, 0.10)` — se dibuja antes de las líneas para que queden encima.
-El `*` en "Sin absorción *" remite a la nota `<p class="grafico-nota">` bajo el canvas:
-"Solo incluye trienios generados en el período analizado".
+La nota `* Solo incluye trienios generados en el período analizado` se dibuja directamente
+en el canvas (bold, `#777`) a continuación del último elemento de la leyenda, en la misma
+línea (`ly = H - 8`). No hay `<p class="grafico-nota">` en el HTML.
+
+### `#proyeccion-absorcion`
+Párrafo de proyección/agotamiento de absorción situado **entre el gráfico y la tabla**
+(no al final del main). `border-top` pertenece a `.tabla-wrapper`, no a este párrafo.
+Texto centrado (`text-align: center`). Dos variantes de mensaje: `.ocurrido` (ya ocurrió,
+en rojo) y `.estimacion` (proyección futura). Mensajes cortos y directos.
 
 ---
 
@@ -362,8 +392,11 @@ pérdidas, modificaciones salariales) y `calcularAcumulados`.
 - [x] Compartir por URL — botón en panel, copia al portapapeles, URL nunca expuesta, limpia al recibir
 - [x] Validación salario por debajo del mínimo de convenio — bloquea cálculo con mensaje
 - [x] Tooltips: `position: fixed` + JS para escapar del `overflow-x: auto` de `.tabla-wrapper`
-- [x] Nota "Sin absorción *" en gráfico — aclara que solo incluye trienios del período
-- [x] Textos justificados en tooltips, labels del panel y nota de compartir
+- [x] Nota "Sin absorción *" dibujada en canvas junto a la leyenda (bold, mismo nivel Y)
+- [x] Textos justificados en tooltips; labels del panel con `text-align: left`
+- [x] localStorage — persistencia manual con botón Guardar/Guardado en sección Acciones
+- [x] Sección Acciones: Guardar · Compartir · Contactar agrupados con tooltips CSS-only al hover
+- [x] `#proyeccion-absorcion` entre gráfico y tabla; mensajes cortos y centrados
 - [ ] Actualizar IPC 2026 cuando el INE publique el dato definitivo
 - [ ] Versión imprimible / exportar a imagen o PDF
 - [ ] Accesibilidad: roles ARIA en combobox, navegación por teclado en tooltips
